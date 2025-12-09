@@ -90,6 +90,31 @@ class LevelSelectState(State):
                 #   on which boss is active.
                 #   Finally, make sure to reset the player’s round score to 0 at the end of this setup.
                 #   Avoid unnecessary repetition—use clear condition structure to make the logic readable.
+                boss_name = lm.curSubLevel.bossLevel
+
+                # Start from normal "base" values each round
+                self.playerInfo.amountOfHands = 4
+                self.playerInfo.amountOfDiscards = 4
+
+                # Apply boss-specific adjustments
+                if boss_name == "The Needle":
+                    # Play only 1 hand
+                    self.playerInfo.amountOfHands = 1
+
+                elif boss_name == "The Water":
+                    # Start with 0 discards
+                    self.playerInfo.amountOfDiscards = 0
+
+                elif boss_name == "The Manacle":
+                    # -1 hand size, if that attribute exists
+                    if hasattr(self.playerInfo, "handSize"):
+                        # make sure it doesn't go below 1
+                        self.playerInfo.handSize = max(1, self.playerInfo.handSize - 1)
+
+                # Other bosses (The Mark, The House, The Hook) are implemented
+                # in card drawing / GameState behavior, so no limit changes here.
+
+                # Reset round score at the end of this setup
                 self.playerInfo.roundScore = 0
                 
                 # Set target score for the new sublevel
@@ -116,7 +141,12 @@ class LevelSelectState(State):
         #   what unique restriction or ability that boss applies during the round.
         #   This dictionary will later be used to look up and apply special effects based on which boss is active.
         boss_abilities = {
-
+            "The Mark": "All face cards (J, Q, K) are drawn face down.",
+            "The Needle": "You can only play 1 hand this round.",
+            "The House": "Your first hand is drawn face down.",
+            "The Hook": "After each played hand, 2 random cards from your hand are discarded.",
+            "The Water": "You start this round with 0 discards.",
+            "The Manacle": "Your hand size is reduced by 1.",
         }
 
         # Dict of boss with their color schemes
