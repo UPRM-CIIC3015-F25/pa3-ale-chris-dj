@@ -555,29 +555,30 @@ class GameState(State):
     #   until the entire hand is ordered correctly.
     def SortCards(self, sort_by: str = "suit"):
         suitOrder = [Suit.HEARTS, Suit.CLUBS, Suit.DIAMONDS, Suit.SPADES]         # Define the order of suits    for i in range(len(self.hand)):
-        for j in range(i + 1, len(self.hand)):
-            swap = False
-            if sort_by == "suit":
-                suit_i = suitOrder.index(self.hand[i].suit)
-                suit_j = suitOrder.index(self.hand[j].suit)
-
-                if suit_i > suit_j:
-                    swap = True
-                elif suit_i == suit_j:
-                    if self.hand[i].rank.value > self.hand[j].rank.value:
-                        swap = True
-            elif sort_by == "rank":
-                if self.hand[i].rank.value > self.hand[j].rank.value:
-                    swap = True
-                elif self.hand[i].rank.value == self.hand[j].rank.value:
+        for i in range(len(self.hand)):
+            for j in range(i + 1, len(self.hand)):
+                swap = False
+                if sort_by == "suit":
                     suit_i = suitOrder.index(self.hand[i].suit)
                     suit_j = suitOrder.index(self.hand[j].suit)
+
                     if suit_i > suit_j:
                         swap = True
-            if swap:
-                self.hand[i], self.hand[j] = self.hand[j], self.hand[i]
+                    elif suit_i == suit_j:
+                        if self.hand[i].rank.value > self.hand[j].rank.value:
+                        swap = True
+                elif sort_by == "rank":
+                    if self.hand[i].rank.value > self.hand[j].rank.value:
+                        swap = True
+                    elif self.hand[i].rank.value == self.hand[j].rank.value:
+                        suit_i = suitOrder.index(self.hand[i].suit)
+                        suit_j = suitOrder.index(self.hand[j].suit)
+                        if suit_i > suit_j:
+                            swap = True
+                if swap:
+                    self.hand[i], self.hand[j] = self.hand[j], self.hand[i]
 
-    self.updateCards(400, 520, self.cards, self.hand, scale=1.2)
+        self.updateCards(400, 520, self.cards, self.hand, scale=1.2)
 
     def checkHoverCards(self):
         mousePos = pygame.mouse.get_pos()
@@ -839,4 +840,31 @@ class GameState(State):
     #   recursion finishes, reset card selections, clear any display text or tracking lists, and
     #   update the visual layout of the player's hand.
     def discardCards(self, removeFromHand: bool):
-        self.updateCards(400, 520, self.cards, self.hand, scale=1.2)
+        if len(self.cardsSelectedList) == 0:
+            self.drawCardsRecursive(8 - len(self.hand))
+
+            self.cardsSelectedList = []
+
+            self.selectedCards = ""
+
+            self.updateCards(400, 520, self.cards, self.hand, scale=1.2)
+            return
+
+        card_remove = self.cardsSelectedList[0]
+
+        if removeFromHand and card_remove in self.hand:
+            self.hand.remove(card_remove)
+
+        self.cardsSelectedList.pop(0)
+
+        self.discardCards(removeFromHand)
+
+    def drawCardsRecursive(self, cards_needed: int):
+        if cards_needed <= 0:
+            return
+
+        if len(self.deck) > 0:
+            self.hand.append(self.deck.pop(0))
+
+        self.drawCardsRecursive(cards_needed - 1)
+
