@@ -566,7 +566,7 @@ class GameState(State):
                         swap = True
                     elif suit_i == suit_j:
                         if self.hand[i].rank.value > self.hand[j].rank.value:
-                        swap = True
+                            swap = True
                 elif sort_by == "rank":
                     if self.hand[i].rank.value > self.hand[j].rank.value:
                         swap = True
