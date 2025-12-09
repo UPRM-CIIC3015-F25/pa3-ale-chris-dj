@@ -804,7 +804,74 @@ class GameState(State):
         #       self.activated_jokers.add("joker card name")
         #   The last line ensures the Joker is visibly active and its effects are properly applied.
 
-        procrastinate = False
+        # The Joker: +4 multiplier
+        if "The Joker" in owned:
+            hand_mult += 4
+            self.activated_jokers.add("The Joker")
+
+        # Michael Myers: add a random multiplier between 0 and 23
+        if "Michael Myers" in owned:
+            added_mult = random.randint(0, 23)
+            hand_mult += added_mult
+            self.activated_jokers.add("Michael Myers")
+
+        # Fibonacci: each played Ace, 2, 3, 5, 8 gives +8 mult
+        if "Fibonacci" in owned:
+            fib_ranks = {Rank.ACE, Rank.TWO, Rank.THREE, Rank.FIVE, Rank.EIGHT}
+            count = 0
+            for c in self.cardsSelectedList:
+                if c.rank in fib_ranks:
+                    count += 1
+            if count > 0:
+                hand_mult += 8 * count
+                self.activated_jokers.add("Fibonacci")
+
+        # Gauntlet: +250 chips, -2 remaining hands
+        if "Gauntlet" in owned:
+            total_chips += 250
+            self.playerInfo.amountOfHands = max(0, self.playerInfo.amountOfHands - 2)
+            self.activated_jokers.add("Gauntlet")
+
+        # Ogre: +3 mult for each owned Joker
+        if "Ogre" in owned:
+            num_jokers = len(owned)
+            hand_mult += 3 * num_jokers
+            self.activated_jokers.add("Ogre")
+
+        # StrawHat: +100 chips, then -5 chips for every hand already played this round
+        # playedHandNameList starts as [''], and we already appended this hand,
+        # so "already played before this one" = len(...) - 2
+        if "StrawHat" in owned:
+            total_chips += 100
+            hands_already_played = max(0, len(self.playedHandNameList) - 2)
+            total_chips -= 5 * hands_already_played
+            self.activated_jokers.add("StrawHat")
+
+        # Hog Rider: +100 chips if the played hand is a Straight
+        if "Hog Rider" in owned and hand_name == "Straight":
+            total_chips += 100
+            self.activated_jokers.add("Hog Rider")
+
+        # ? Block: +4 chips if the played hand used exactly 4 cards
+        if "? Block" in owned and len(self.cardsSelectedList) == 4:
+            total_chips += 4
+            self.activated_jokers.add("? Block")
+
+        # Hogwarts: each Ace played gives +4 mult and +20 chips
+        if "Hogwarts" in owned:
+            ace_count = 0
+            for c in self.cardsSelectedList:
+                if c.rank == Rank.ACE:
+                    ace_count += 1
+            if ace_count > 0:
+                hand_mult += 4 * ace_count
+                total_chips += 20 * ace_count
+                self.activated_jokers.add("Hogwarts")
+
+        # 802: if this is the last hand (amountOfHands == 0 after decrement), double the gain
+        if "802" in owned and self.playerInfo.amountOfHands == 0:
+            procrastinate = True
+            self.activated_jokers.add("802")
 
         # commit modified player multiplier and chips
         self.playerInfo.playerMultiplier = hand_mult
