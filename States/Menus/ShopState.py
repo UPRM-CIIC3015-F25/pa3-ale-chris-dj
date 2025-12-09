@@ -98,8 +98,29 @@ class ShopState(State):
     #   containing its "chips", "multiplier", and "level" fields.
     #   Remember: the Sun upgrades all hands, while other planets upgrade only their specific one.
     def activatePlanet(self, planet):
-        keys = HAND_SCORES.keys()
+        # Safety: do nothing if planet is None
+        if planet is None:
+            return
 
+        # If the planet is the Sun, upgrade ALL hands
+        if planet.name == "Sun":
+            for hand_name, stats in HAND_SCORES.items():
+                stats["chips"] += planet.chips
+                stats["multiplier"] += planet.mult
+                stats["level"] += 1
+            print(f"[PLANET] {planet.name} upgraded ALL hands!")
+            return
+
+        # For every other planet: upgrade exactly one matching hand
+        for hand_name, stats in HAND_SCORES.items():
+            # Example: description "levels up Two Pair" → matches hand_name == "Two Pair"
+            if hand_name in planet.description:
+                stats["chips"] += planet.chips
+                stats["multiplier"] += planet.mult
+                stats["level"] += 1
+                print(f"[PLANET] {planet.name} upgraded {hand_name}: "
+                      f"+{planet.chips} chips, +{planet.mult} mult, level -> {stats['level']}")
+                break  # stop after first match
     # ---------- Helpers ----------
     def _wrap_lines(self, text, font, max_width):
         words = text.split()
